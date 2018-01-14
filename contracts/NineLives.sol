@@ -4,10 +4,9 @@ import "../node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract NineLives is Pausable {
+    using SafeMath for uint256;
 
     event KittySpawned(uint _kittyId);
-
-    using SafeMath for uint256;
     
     mapping (uint => Kitty) public liveKitties;
     mapping (address => uint) public pendingReturns;
@@ -26,6 +25,7 @@ contract NineLives is Pausable {
     struct Kitty {
         uint256 id;
         uint8 lives;
+        bool isBattling;
         bool isReadyToBattle;
     }
 
@@ -55,7 +55,7 @@ contract NineLives is Pausable {
         var kitty = liveKitties[_id];
         kitty.id = _id;
         kitty.lives = 10;
-        kitty.isReadyToBattle = false;
+        kitty.isBattling = false;
         kittyIds.push(_id);
 
         KittySpawned(_id);
@@ -96,10 +96,10 @@ contract NineLives is Pausable {
         kittyExists(_id)
         returns (
             uint8 lives,
-            bool isReadyToBattle
+            bool isBattling
         )
     {
-        return (liveKitties[_id].lives, liveKitties[_id].isReadyToBattle);
+        return (liveKitties[_id].lives, liveKitties[_id].isBattling);
     }
    
     /**
@@ -119,11 +119,24 @@ contract NineLives is Pausable {
      * @dev Returns if the kitty is ready for battle
      * @param _id The kitty's id
      */
+    function isBattling(uint _id) 
+        external
+        view
+        kittyExists(_id)
+        returns (bool isBattling)
+    {
+        return liveKitties[_id].isBattling;
+    }
+
+    /**
+     * @dev Returns if the kitty is ready for battle
+     * @param _id The kitty's id
+     */
     function isReadyToBattle(uint _id) 
         external
         view
         kittyExists(_id)
-        returns (bool isReady)
+        returns (bool isReadyToBattle)
     {
         return liveKitties[_id].isReadyToBattle;
     }
@@ -131,9 +144,24 @@ contract NineLives is Pausable {
     /**
      * @dev Changes kitties battle state
      * @param _id The kitty's id
-     * @param _isReadyToBattle Boolean to set the battle state to
+     * @param _isBattling Boolean to set the battle state to
      */
-    function setReadyToBattle(uint _id, bool _isReadyToBattle) 
+    function setBattling(uint _id, bool _isBattling) 
+        external
+        kittyExists(_id) 
+        onlyArena
+    {
+        
+        liveKitties[_id].isBattling = _isBattling;
+    }
+
+    
+    /**
+     * @dev Changes kitties battle state
+     * @param _id The kitty's id
+     * @param _isBattling Boolean to set the battle state to
+     */
+    function setIsReadyToBattle(uint _id, bool _isReadyToBattle) 
         external
         kittyExists(_id) 
         onlyArena
