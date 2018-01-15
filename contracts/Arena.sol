@@ -5,6 +5,17 @@ import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CryptoKittyInterfaces/CryptoKittyInterface.sol";
 
 contract NineLivesInterface {
+    struct Kitty {
+        uint256 genes;
+        uint64 birthTime;
+        uint64 cooldownEndBlock;
+        uint32 matronId;
+        uint32 sireId;
+        uint32 siringWithId;
+        uint16 cooldownIndex;
+        uint16 generation;
+    }
+
     mapping (uint => Kitty) public liveKitties;
     mapping (address => uint) public pendingReturns;
 
@@ -29,6 +40,10 @@ contract NineLivesInterface {
 
 contract Arena is Ownable {
     using SafeMath for uint256;
+
+    event LogBattleResult(uint kittyWinner, uint kittyLoser);
+    event LogKittyReadyToBattle(uint _kittyId);
+    event LogKittyWithdraw(uint _kittyId);
 
     //Reward in ninelives token
     uint constant WIN_REWARD = 10;
@@ -96,6 +111,8 @@ contract Arena is Ownable {
         kittyInterface.transferFrom(msg.sender, address(this), _kittyId);
 
         nineLivesInterface.setIsReadyToBattle(_kittyId, true);
+
+        LogKittyReadyToBattle(_kittyId);
     }
 
     /**
@@ -113,10 +130,12 @@ contract Arena is Ownable {
         //Clear transferFrom rights from the arena contract
         kittyInterface.approve(address(0), _kittyId);
 
+        nineLivesInterface.setIsReadyToBattle(_kittyId, false);
+
         //Transfer the kitty back to the owner
         kittyInterface.transfer(msg.sender, _kittyId);
-
-        nineLivesInterface.setIsReadyToBattle(_kittyId, false);
+        
+        LogKittyWithdraw(_kittyId);
     }
 
     /**
@@ -184,12 +203,14 @@ contract Arena is Ownable {
             rewards[attackerOwner] = rewards[attackerOwner].add(WIN_REWARD);
             rewards[defenderOwner] = rewards[defenderOwner].add(LOSS_REWARD).add(LOSS_REWARD.mul(DEFENDER_BONUS_PER).div(100));
             nineLivesInterface.decrementLives(_kittyIdDefender);
+            LogBattleResult(_kittyIdAttacker, _kittyIdDefender);
         }
         else {
             //Defender won
             rewards[attackerOwner] = rewards[attackerOwner].add(LOSS_REWARD);
             rewards[defenderOwner] = rewards[defenderOwner].add(WIN_REWARD).add(WIN_REWARD.mul(DEFENDER_BONUS_PER).div(100));
             nineLivesInterface.decrementLives(_kittyIdAttacker);
+            LogBattleResult(_kittyIdDefender, _kittyIdAttacker);
         }
 
         _finishedBattling(_kittyIdAttacker);
@@ -223,10 +244,10 @@ contract Arena is Ownable {
         //Clear transferFrom rights from the arena contract
         kittyInterface.approve(address(0), _kittyId);
 
+        nineLivesInterface.setBattling(_kittyId, false);
+
         //Transfer the kitty back to the owner
         kittyInterface.transfer(owner, _kittyId);
-
-        nineLivesInterface.setBattling(_kittyId, false);
     }
 
     modifier isValidAddress() {

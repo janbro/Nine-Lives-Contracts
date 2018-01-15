@@ -6,7 +6,7 @@ import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 contract NineLives is Pausable {
     using SafeMath for uint256;
 
-    event KittySpawned(uint _kittyId);
+    event LogKittySpawned(uint _kittyId);
     
     mapping (uint => Kitty) public liveKitties;
     mapping (address => uint) public pendingReturns;
@@ -17,8 +17,7 @@ contract NineLives is Pausable {
 
     address private arenaContract;
 
-    function NineLives(address _arenaContract, uint _weiPerSpawn) public {
-        arenaContract = _arenaContract;
+    function NineLives(uint _weiPerSpawn) public {
         weiPerSpawn = _weiPerSpawn;
     }
     
@@ -27,6 +26,14 @@ contract NineLives is Pausable {
         uint8 lives;
         bool isBattling;
         bool isReadyToBattle;
+    }
+
+    function updateArenaContract(address _arenaContract)
+        external
+        onlyOwner
+    {
+        require(_arenaContract != address(0));
+        arenaContract = _arenaContract;
     }
 
     /**
@@ -38,6 +45,11 @@ contract NineLives is Pausable {
         onlyOwner
     {
         weiPerSpawn = _weiPerSpawn;
+    }
+
+    // default payable function when sending ether to this contract
+    function () external payable {
+        pendingReturns[msg.sender] = pendingReturns[msg.sender].add(msg.value);
     }
    
    /**
@@ -58,7 +70,7 @@ contract NineLives is Pausable {
         kitty.isBattling = false;
         kittyIds.push(_id);
 
-        KittySpawned(_id);
+        LogKittySpawned(_id);
 
         //Keep track of user's overpayments so they can recover
         uint refund = msg.value.sub(weiPerSpawn);
@@ -70,20 +82,14 @@ contract NineLives is Pausable {
      */
     function withdrawRefund()
         external
-        returns (bool)
     {
         var amount = pendingReturns[msg.sender];
 
-        if (amount > 0) {
-            pendingReturns[msg.sender] = 0;
+        require(amount > 0);
 
-            if (!msg.sender.send(amount)) {
-                // No need to call throw here, just reset the amount owing
-                pendingReturns[msg.sender] = amount;
-                return false;
-            }
-        }
-        return true;
+        pendingReturns[msg.sender] = 0;
+
+        msg.sender.transfer(amount);
     }
 
     /**
@@ -150,6 +156,7 @@ contract NineLives is Pausable {
         external
         kittyExists(_id) 
         onlyArena
+        whenNotPaused
     {
         
         liveKitties[_id].isBattling = _isBattling;
@@ -165,6 +172,7 @@ contract NineLives is Pausable {
         external
         kittyExists(_id) 
         onlyArena
+        whenNotPaused
     {
         
         liveKitties[_id].isReadyToBattle = _isReadyToBattle;
@@ -178,10 +186,18 @@ contract NineLives is Pausable {
         external
         kittyExists(_id)
         onlyArena
+        whenNotPaused
     {
         require(liveKitties[_id].lives > 1);
         
         liveKitties[_id].lives--;
+    }
+
+    function withdrawFunds()
+        external
+        onlyOwner
+    {
+        msg.sender.transfer(this.balance);
     }
 
     /**
