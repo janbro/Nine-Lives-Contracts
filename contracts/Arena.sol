@@ -48,6 +48,7 @@ contract Arena is Ownable {
     //Reward in ninelives token
     uint constant WIN_REWARD = 10;
     uint constant LOSS_REWARD = 4;
+    uint constant GRAVEYARD_ADDRESS = 0x0000000000000000000000000000000000000000;
 
     uint constant DEFENDER_BONUS_PER = 50; //Defender bonus percentage
 
@@ -176,25 +177,33 @@ contract Arena is Ownable {
         uint[4] defenderStats;
         (,,,,, defenderStats[0], defenderStats[1], defenderStats[2], defenderStats[3],) = kittyInterface.getKitty(_kittyIdDefender);
 
-        if(attackerStats[0] > defenderStats[0])
+        if(attackerStats[0] > defenderStats[0]) {
             winPercentageAttacker += 20;
-        else if(attackerStats[0] == defenderStats[0])
+        }
+        else if(attackerStats[0] == defenderStats[0]) {
             winPercentageAttacker += 10;
+        }
 
-        if(attackerStats[1] > defenderStats[1])
+        if(attackerStats[1] > defenderStats[1]) {
             winPercentageAttacker += 20;
-        else if(attackerStats[1] == defenderStats[1])
+        }
+        else if(attackerStats[1] == defenderStats[1]) {
             winPercentageAttacker += 10;
+        }
 
-        if(attackerStats[2] > defenderStats[2])
+        if(attackerStats[2] > defenderStats[2]) {
             winPercentageAttacker += 20;
-        else if(attackerStats[2] == defenderStats[2])
+        }
+        else if(attackerStats[2] == defenderStats[2]) {
             winPercentageAttacker += 10;
+        }
 
-        if(attackerStats[3] > defenderStats[3])
+        if(attackerStats[3] > defenderStats[3]) {
             winPercentageAttacker += 20;
-        else if(attackerStats[3] == defenderStats[3])
+        }
+        else if(attackerStats[3] == defenderStats[3]) {
             winPercentageAttacker += 10;
+        }
 
         bool attackerWins = _randomNumber(0, 100) < winPercentageAttacker;
 
@@ -246,8 +255,13 @@ contract Arena is Ownable {
 
         nineLivesInterface.setBattling(_kittyId, false);
 
-        //Transfer the kitty back to the owner
-        kittyInterface.transfer(owner, _kittyId);
+        if(nineLivesInterface.getKittyLives(_kittyId) == 1) {
+            kittyInterface.transfer(GRAVEYARD_ADDRESS, _kittyId);
+        }
+        else {
+            //Transfer the kitty back to the owner
+            kittyInterface.transfer(owner, _kittyId);
+        }
     }
 
     modifier isValidAddress() {
