@@ -24,7 +24,6 @@ contract NineLives is Pausable {
     struct Kitty {
         uint256 id;
         uint8 lives;
-        bool isBattling;
         bool isReadyToBattle;
     }
 
@@ -67,7 +66,7 @@ contract NineLives is Pausable {
         var kitty = liveKitties[_id];
         kitty.id = _id;
         kitty.lives = 10;
-        kitty.isBattling = false;
+        kitty.isReadyToBattle = false;
         kittyIds.push(_id);
 
         LogKittySpawned(_id);
@@ -120,19 +119,6 @@ contract NineLives is Pausable {
     {
         return liveKitties[_id].lives;
     }
-    
-    /**
-     * @dev Returns if the kitty is ready for battle
-     * @param _id The kitty's id
-     */
-    function isBattling(uint _id) 
-        external
-        view
-        kittyExists(_id)
-        returns (bool isBattling)
-    {
-        return liveKitties[_id].isBattling;
-    }
 
     /**
      * @dev Returns if the kitty is ready for battle
@@ -145,21 +131,6 @@ contract NineLives is Pausable {
         returns (bool isReadyToBattle)
     {
         return liveKitties[_id].isReadyToBattle;
-    }
-    
-    /**
-     * @dev Changes kitties battle state
-     * @param _id The kitty's id
-     * @param _isBattling Boolean to set the battle state to
-     */
-    function setBattling(uint _id, bool _isBattling) 
-        external
-        kittyExists(_id) 
-        onlyArena
-        whenNotPaused
-    {
-        
-        liveKitties[_id].isBattling = _isBattling;
     }
 
     

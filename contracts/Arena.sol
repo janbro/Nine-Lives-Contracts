@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import "../node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CryptoKittyInterfaces/CryptoKittyInterface.sol";
 
@@ -27,18 +27,14 @@ contract NineLivesInterface {
    
     function getKittyLives(uint _id) external view returns (uint8 lives);
     
-    function isBattling(uint _id) external view returns (bool isBattling);
-
     function isReadyToBattle(uint _id) external view returns (bool isReadyToBattle);
-    
-    function setBattling(uint _id, bool _isBattling) external;
 
     function setIsReadyToBattle(uint _id, bool _isReadyToBattle) external;
 
     function decrementLives(uint _id) external;
 }
 
-contract Arena is Ownable {
+contract Arena is Pausable {
     using SafeMath for uint256;
 
     event LogBattleResult(uint kittyWinner, uint kittyLoser);
@@ -48,7 +44,7 @@ contract Arena is Ownable {
     //Reward in ninelives token
     uint constant WIN_REWARD = 10;
     uint constant LOSS_REWARD = 4;
-    uint constant GRAVEYARD_ADDRESS = 0x0000000000000000000000000000000000000000;
+    address constant GRAVEYARD_ADDRESS = address(0x0);
 
     uint constant DEFENDER_BONUS_PER = 50; //Defender bonus percentage
 
@@ -70,9 +66,8 @@ contract Arena is Ownable {
      */
     function sendKittyToBattle(uint _kittyId, uint _kittyToBattle)
         external
-        isValidAddress
+        whenNotPaused
         isOwnerOf(_kittyId)
-        isNotBattling(_kittyId)
     {
         //Check arena is approved to transfer kitty
         require(kittyInterface.kittyIndexToApproved(_kittyId) == address(this));
@@ -85,10 +80,6 @@ contract Arena is Ownable {
 
         kittyInterface.transferFrom(msg.sender, address(this), _kittyId);
 
-        nineLivesInterface.setIsReadyToBattle(_kittyToBattle, false);
-        nineLivesInterface.setBattling(_kittyId, true);
-        nineLivesInterface.setBattling(_kittyToBattle, true);
-
         _battle(_kittyId, _kittyToBattle);
     }
 
@@ -99,9 +90,8 @@ contract Arena is Ownable {
      */
     function sendKittyReadyToBattle(uint _kittyId)
         external
-        isValidAddress
+        whenNotPaused
         isOwnerOf(_kittyId)
-        isNotBattling(_kittyId)
     {
         //Check arena is approved to transfer kitty
         require(kittyInterface.kittyIndexToApproved(_kittyId) == address(this));
@@ -123,7 +113,7 @@ contract Arena is Ownable {
      */
     function withdrawKitty(uint _kittyId)
         external
-        isValidAddress
+        whenNotPaused
     {
         require(kittyIndexToOwner[_kittyId] == msg.sender);
         kittyIndexToOwner[_kittyId] = 0;
@@ -246,36 +236,18 @@ contract Arena is Ownable {
     function _finishedBattling(uint _kittyId)
         internal
     {
-        address owner = kittyIndexToOwner[_kittyId];
-
         kittyIndexToOwner[_kittyId] = 0;
-
-        //Clear transferFrom rights from the arena contract
-        kittyInterface.approve(address(0), _kittyId);
-
-        nineLivesInterface.setBattling(_kittyId, false);
 
         if(nineLivesInterface.getKittyLives(_kittyId) == 1) {
             kittyInterface.transfer(GRAVEYARD_ADDRESS, _kittyId);
         }
         else {
-            //Transfer the kitty back to the owner
-            kittyInterface.transfer(owner, _kittyId);
+            nineLivesInterface.setIsReadyToBattle(_kittyId, false);
         }
-    }
-
-    modifier isValidAddress() {
-        require(msg.sender != address(0));
-        _;
     }
 
     modifier isOwnerOf(uint _kittyId) {
         require(kittyInterface.ownerOf(_kittyId) == msg.sender);
-        _;
-    }
-
-    modifier isNotBattling(uint _kittyId) {
-        require(!nineLivesInterface.isBattling(_kittyId));
         _;
     }
 
