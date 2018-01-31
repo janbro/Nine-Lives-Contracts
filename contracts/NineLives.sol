@@ -101,10 +101,10 @@ contract NineLives is Pausable {
         kittyExists(_id)
         returns (
             uint8 lives,
-            bool isBattling
+            bool isReadyToBattle
         )
     {
-        return (liveKitties[_id].lives, liveKitties[_id].isBattling);
+        return (liveKitties[_id].lives, liveKitties[_id].isReadyToBattle);
     }
    
     /**
@@ -137,7 +137,7 @@ contract NineLives is Pausable {
     /**
      * @dev Changes kitties battle state
      * @param _id The kitty's id
-     * @param _isBattling Boolean to set the battle state to
+     * @param _isReadyToBattle Boolean to set the battle state to
      */
     function setIsReadyToBattle(uint _id, bool _isReadyToBattle) 
         external
