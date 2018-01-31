@@ -4,10 +4,9 @@ import "../node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract NineLives is Pausable {
-
-    event KittySpawned(uint _kittyId);
-
     using SafeMath for uint256;
+
+    event LogKittySpawned(uint _kittyId);
     
     mapping (uint => Kitty) public liveKitties;
     mapping (address => uint) public pendingReturns;
@@ -18,8 +17,7 @@ contract NineLives is Pausable {
 
     address private arenaContract;
 
-    function NineLives(address _arenaContract, uint _weiPerSpawn) public {
-        arenaContract = _arenaContract;
+    function NineLives(uint _weiPerSpawn) public {
         weiPerSpawn = _weiPerSpawn;
     }
     
@@ -27,6 +25,14 @@ contract NineLives is Pausable {
         uint256 id;
         uint8 lives;
         bool isReadyToBattle;
+    }
+
+    function updateArenaContract(address _arenaContract)
+        external
+        onlyOwner
+    {
+        require(_arenaContract != address(0));
+        arenaContract = _arenaContract;
     }
 
     /**
@@ -38,6 +44,11 @@ contract NineLives is Pausable {
         onlyOwner
     {
         weiPerSpawn = _weiPerSpawn;
+    }
+
+    // default payable function when sending ether to this contract
+    function () external payable {
+        pendingReturns[msg.sender] = pendingReturns[msg.sender].add(msg.value);
     }
    
    /**
@@ -58,7 +69,7 @@ contract NineLives is Pausable {
         kitty.isReadyToBattle = false;
         kittyIds.push(_id);
 
-        KittySpawned(_id);
+        LogKittySpawned(_id);
 
         //Keep track of user's overpayments so they can recover
         uint refund = msg.value.sub(weiPerSpawn);
@@ -70,20 +81,14 @@ contract NineLives is Pausable {
      */
     function withdrawRefund()
         external
-        returns (bool)
     {
         var amount = pendingReturns[msg.sender];
 
-        if (amount > 0) {
-            pendingReturns[msg.sender] = 0;
+        require(amount > 0);
 
-            if (!msg.sender.send(amount)) {
-                // No need to call throw here, just reset the amount owing
-                pendingReturns[msg.sender] = amount;
-                return false;
-            }
-        }
-        return true;
+        pendingReturns[msg.sender] = 0;
+
+        msg.sender.transfer(amount);
     }
 
     /**
@@ -96,10 +101,10 @@ contract NineLives is Pausable {
         kittyExists(_id)
         returns (
             uint8 lives,
-            bool isReadyToBattle
+            bool isBattling
         )
     {
-        return (liveKitties[_id].lives, liveKitties[_id].isReadyToBattle);
+        return (liveKitties[_id].lives, liveKitties[_id].isBattling);
     }
    
     /**
@@ -114,7 +119,7 @@ contract NineLives is Pausable {
     {
         return liveKitties[_id].lives;
     }
-    
+
     /**
      * @dev Returns if the kitty is ready for battle
      * @param _id The kitty's id
@@ -123,20 +128,22 @@ contract NineLives is Pausable {
         external
         view
         kittyExists(_id)
-        returns (bool isReady)
+        returns (bool isReadyToBattle)
     {
         return liveKitties[_id].isReadyToBattle;
     }
+
     
     /**
      * @dev Changes kitties battle state
      * @param _id The kitty's id
-     * @param _isReadyToBattle Boolean to set the battle state to
+     * @param _isBattling Boolean to set the battle state to
      */
-    function setReadyToBattle(uint _id, bool _isReadyToBattle) 
+    function setIsReadyToBattle(uint _id, bool _isReadyToBattle) 
         external
         kittyExists(_id) 
         onlyArena
+        whenNotPaused
     {
         
         liveKitties[_id].isReadyToBattle = _isReadyToBattle;
@@ -150,10 +157,18 @@ contract NineLives is Pausable {
         external
         kittyExists(_id)
         onlyArena
+        whenNotPaused
     {
         require(liveKitties[_id].lives > 1);
         
         liveKitties[_id].lives--;
+    }
+
+    function withdrawFunds()
+        external
+        onlyOwner
+    {
+        msg.sender.transfer(this.balance);
     }
 
     /**
