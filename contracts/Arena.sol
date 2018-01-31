@@ -5,18 +5,7 @@ import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CryptoKittyInterfaces/CryptoKittyInterface.sol";
 
 contract NineLivesInterface {
-    struct Kitty {
-        uint256 genes;
-        uint64 birthTime;
-        uint64 cooldownEndBlock;
-        uint32 matronId;
-        uint32 sireId;
-        uint32 siringWithId;
-        uint16 cooldownIndex;
-        uint16 generation;
-    }
 
-    mapping (uint => Kitty) public liveKitties;
     mapping (address => uint) public pendingReturns;
 
     uint[] public kittyIds;
@@ -153,18 +142,18 @@ contract Arena is Pausable {
     function _battle(uint _kittyIdAttacker, uint _kittyIdDefender)
         internal
     {
-        require(kittyInterface.ownerOf(_kittyIdAttacker) == address(this));
-        require(kittyInterface.ownerOf(_kittyIdDefender) == address(this));
+        assert(kittyInterface.ownerOf(_kittyIdAttacker) == address(this));
+        assert(kittyInterface.ownerOf(_kittyIdDefender) == address(this));
 
         uint8 winPercentageAttacker = 10;
 
         address attackerOwner = kittyIndexToOwner[_kittyIdAttacker];
         address defenderOwner = kittyIndexToOwner[_kittyIdDefender];
 
-        uint[4] attackerStats;
+        uint[4] memory attackerStats;
         (,,,,, attackerStats[0], attackerStats[1], attackerStats[2], attackerStats[3],) = kittyInterface.getKitty(_kittyIdAttacker);
 
-        uint[4] defenderStats;
+        uint[4] memory defenderStats;
         (,,,,, defenderStats[0], defenderStats[1], defenderStats[2], defenderStats[3],) = kittyInterface.getKitty(_kittyIdDefender);
 
         if(attackerStats[0] > defenderStats[0]) {
@@ -222,10 +211,12 @@ contract Arena is Pausable {
      */
     function _randomNumber(uint _floor, uint _ceiling)
         internal
+        view
         returns (uint)
     {
         require(_ceiling > _floor);
-        uint random_number = uint(block.blockhash(block.number-1))%(_ceiling.sub(_floor)).add(_floor);
+        
+        return uint(block.blockhash(block.number-1))%(_ceiling.sub(_floor)).add(_floor);
     }
 
     /**
