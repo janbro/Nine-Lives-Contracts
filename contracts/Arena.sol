@@ -18,7 +18,7 @@ contract Arena is Pausable {
     //Reward in ninelives token
     uint256 constant WIN_REWARD = 10;
     uint256 constant LOSS_REWARD = 4;
-    address constant GRAVEYARD_ADDRESS = address(0x0);
+    address constant GRAVEYARD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     uint256 constant DEFENDER_BONUS_PER = 50; //Defender bonus percentage
 
