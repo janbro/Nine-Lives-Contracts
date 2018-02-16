@@ -159,9 +159,8 @@ contract NineLives is Pausable {
         onlyArena
         whenNotPaused
     {
-        require(liveKitties[_id].lives > 1);
-        
-        liveKitties[_id].lives--;
+        if(liveKitties[_id].lives > 1)
+            liveKitties[_id].lives--;
     }
 
     function withdrawFunds()
