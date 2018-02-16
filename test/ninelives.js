@@ -102,7 +102,7 @@ contract("NineLives", function(accounts) {
             });
         });
 
-        it("shouldn't decerement kitty life below 1", async function() {
+        it("shouldn't decrement kitty life below 1", async function() {
             await nlInstance.decrementLives(1, {from:accounts[0]}); // 7
             await nlInstance.decrementLives(1, {from:accounts[0]}); // 6
             await nlInstance.decrementLives(1, {from:accounts[0]}); // 5
