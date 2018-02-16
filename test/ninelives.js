@@ -48,7 +48,7 @@ contract("NineLives", function(accounts) {
         });
 
         it("should add refund on overpayment", async function() {
-            await nlInstance.spawnKitty(420, {from:accounts[0], value:web3.toWei(1, "ether")});
+            await nlInstance.spawnKitty(420, {from:accounts[0], value:weiAmount*2});
             var rtn = await nlInstance.pendingReturns(accounts[0], {from:accounts[0]});
             assert(rtn.equals(weiAmount), "return doesn't match expected value");
         });
