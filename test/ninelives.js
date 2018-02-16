@@ -131,7 +131,7 @@ contract("NineLives", function(accounts) {
 
                 nlInstance.decrementLives(1, {from:accounts[0]}).then(function () {
                     assert(false, "security is breached");
-                }).catch(function(err) {
+                }).catch(function(error) {
                     if(error.toString().indexOf("revert") != -1) {
                         assert(true, "Call reverted. Test succeeded.")
                     } else {
@@ -144,7 +144,7 @@ contract("NineLives", function(accounts) {
             it("should not be able to change kitty readytobattle", async function() {
                 nlInstance.setIsReadyToBattle(1, {from:accounts[0]}).then(function () {
                     assert(false, "security is breached");
-                }).catch(function(err) {
+                }).catch(function(error) {
                     if(error.toString().indexOf("revert") != -1) {
                         assert(true, "Call reverted. Test succeeded.")
                     } else {
