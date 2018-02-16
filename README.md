@@ -22,3 +22,9 @@ To deploy the smart contract on the development network, run:
 ```
 truffle migrate --network development
 ```
+
+### Testing
+Tests framework is [mocha](https://mochajs.org/). Run tests with:
+```
+truffle test
+``` 
