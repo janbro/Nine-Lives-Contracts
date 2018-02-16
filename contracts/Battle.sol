@@ -1,10 +1,9 @@
 pragma solidity ^0.4.18;
 
-import "../node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Interfaces/CryptoKittyInterface.sol";
 
-contract Battle is Pausable {
+contract Battle {
     using SafeMath for uint256;
 
     address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;
