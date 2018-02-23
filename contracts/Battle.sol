@@ -6,8 +6,13 @@ import "./Interfaces/CryptoKittyInterface.sol";
 contract Battle {
     using SafeMath for uint256;
 
-    address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;
-    CryptoKittyInterface kittyInterface = CryptoKittyInterface(ckAddress);
+    address public ckAddress = address(0x0);
+    CryptoKittyInterface kittyInterface;
+
+    function Battle(address kCore) public {
+        ckAddress = kCore;
+        kittyInterface = CryptoKittyInterface(ckAddress);
+    }
 
     /**
      * @dev 
@@ -15,6 +20,7 @@ contract Battle {
     function doBattle(uint256 _kittyIdAttacker, uint256 _kittyIdDefender)
         external
         view
+        isConnected
         returns (uint256)
     {
         uint8 winPercentageAttacker = 10;
@@ -72,6 +78,11 @@ contract Battle {
         require(_ceiling > _floor);
         
         return uint(block.blockhash(block.number-1))%(_ceiling.sub(_floor)).add(_floor);
+    }
+
+    modifier isConnected() {
+        require(ckAddress != address(0x0));
+        _;
     }
 
 }

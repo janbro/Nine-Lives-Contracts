@@ -1,7 +1,7 @@
 var BigNumber = require('bignumber.js');
 
 // Specifically request an abstraction for MetaCoin
-var NineLives = artifacts.require("NineLives");
+var NineLives = artifacts.require("./NineLives.sol");
 
 contract("NineLives", function(accounts) {
     var nlInstance;
