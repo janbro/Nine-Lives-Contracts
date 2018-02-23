@@ -73,7 +73,7 @@ contract("Arena", function(accounts) {
 
         it("should have decremented kitty life", async function() {
             var atkLives = await nlInstance.getKittyLives(1, {from:accounts[0]});
-            var defLives = await nlInstance.getKittyLives(4, {from:accounts[1]});
+            var defLives = await nlInstance.getKittyLives(8, {from:accounts[1]});
 
             assert(atkLives != defLives, "Kitty life was not decremented!");
         });
