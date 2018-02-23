@@ -1,13 +1,18 @@
 var BigNumber = require('bignumber.js');
 
 // Specifically request an abstraction for MetaCoin
-var NineLives = artifacts.require("NineLives");
+var NineLives = artifacts.require("./NineLives.sol");
 
 contract("NineLives", function(accounts) {
     var nlInstance;
     
     before(async function () {
         nlInstance = await NineLives.deployed();
+
+        await nlInstance.unpause({from:accounts[0]});
+        var nlIsPaused = await nlInstance.paused({from:accounts[0]});
+
+        assert(!nlIsPaused, "Contract couldn't unpause");
         
         await nlInstance.spawnKitty(1, {from:accounts[0]});
     });
