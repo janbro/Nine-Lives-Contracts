@@ -19,6 +19,7 @@ contract NineLives is Pausable {
 
     function NineLives(uint _weiPerSpawn) public {
         weiPerSpawn = _weiPerSpawn;
+        paused = true;
     }
     
     struct Kitty {
