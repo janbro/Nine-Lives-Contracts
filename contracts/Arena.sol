@@ -22,13 +22,13 @@ contract Arena is Pausable {
 
     uint256 constant DEFENDER_BONUS_PER = 50; //Defender bonus percentage
 
-    address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;
-    CryptoKittyInterface kittyInterface = CryptoKittyInterface(ckAddress);
+    address public ckAddress = address(0x0);//0x06012c8cf97BEaD5deAe237070F9587f8E7A266d
+    CryptoKittyInterface kittyInterface;
 
-    address nlAddress = 0x0;
+    address nlAddress = address(0x0);
     NineLivesInterface nineLivesInterface;
 
-    address battleAddress = 0x0;
+    address battleAddress = address(0x0);
     BattleInterface battleInterface;
 
     mapping (uint256 => address) public kittyIndexToOwner;
@@ -38,16 +38,21 @@ contract Arena is Pausable {
     /**
      * @dev Contructor
      */
-    function Arena(address _nineLivesAddress, address _battleAddress)
+    function Arena(address _nineLivesAddress, address _battleAddress, address _kCore)
         public
     {
         require(_nineLivesAddress != address(0x0));
         require(_battleAddress != address(0x0));
+        require(_kCore != address(0x0));
 
         nlAddress = _nineLivesAddress;
         battleAddress = _battleAddress;
+        ckAddress = _kCore;
         nineLivesInterface = NineLivesInterface(nlAddress);
         battleInterface = BattleInterface(battleAddress);
+        kittyInterface = CryptoKittyInterface(ckAddress);
+
+        paused = true;
     }
 
     /**
@@ -59,6 +64,7 @@ contract Arena is Pausable {
         external
         onlyOwner
     {
+        require(_battleAddress != address(0x0));
         battleAddress = _battleAddress;
         battleInterface = BattleInterface(battleAddress);
         UpdateBattleContract(_battleAddress);
@@ -121,7 +127,6 @@ contract Arena is Pausable {
      */
     function withdrawKitty(uint _kittyId)
         external
-        whenNotPaused
     {
         require(kittyIndexToOwner[_kittyId] == msg.sender);
         kittyIndexToOwner[_kittyId] = 0;
@@ -178,6 +183,7 @@ contract Arena is Pausable {
      */
     function _battle(uint _kittyIdAttacker, uint _kittyIdDefender)
         internal
+        whenNotPaused
     {
         assert(kittyInterface.ownerOf(_kittyIdAttacker) == address(this));
         assert(kittyInterface.ownerOf(_kittyIdDefender) == address(this));
