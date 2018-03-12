@@ -1,5 +1,9 @@
 Nine Lives Contracts
 ========================
+
+Nine Lives is a smart contract built on top of Crypto Kitties which allows users to battle their kitties with real stakes at hand. Kitties start with 9 lives, and users battle to earn kitty tokens to buy accessories and customize their cats. However, once a kitty uses its last life, it dies forever (by being sent to 0x0). Nine Lives tackles the increasing problem of overpopulation and unwanted kitties by pitting them against each other in fights to the death! Users are incentivized to battle with their unwanted kitties so they can purchase accessories for the kitties they hold closest to their hearts. Kittys are “spawned” through the Nine Lives contract, and a spawn price is modifiable (could be 0). Once a kitty has been spawned, it cannot regain lives it has lost. The arena contract does not need to know the mechanics of battling, just the address of the battle contract which returns the winning kitty.
+
+
 ### Preparations
 Install dependencies:
 ```
