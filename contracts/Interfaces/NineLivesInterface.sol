@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 contract NineLivesInterface {
 
@@ -8,11 +8,11 @@ contract NineLivesInterface {
 
     uint256 public weiPerSpawn;
 
-    function getKittyInfo(uint256 _id) external view returns (uint8 lives, bool isReadyToBattle);
+    function getKittyInfo(uint256 _id) external view returns (uint8 _lives, bool _isReadyToBattle);
    
-    function getKittyLives(uint256 _id) external view returns (uint8 lives);
+    function getKittyLives(uint256 _id) external view returns (uint8 _lives);
     
-    function isReadyToBattle(uint256 _id) external view returns (bool isReadyToBattle);
+    function isReadyToBattle(uint256 _id) external view returns (bool _isReadyToBattle);
 
     function setIsReadyToBattle(uint256 _id, bool _isReadyToBattle) external;
 

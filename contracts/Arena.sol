@@ -1,19 +1,20 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "../node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Interfaces/CryptoKittyInterface.sol";
 import "./Interfaces/NineLivesInterface.sol";
 import "./Interfaces/BattleInterface.sol";
+import "./Interfaces/TokenInterface.sol";
 
 contract Arena is Pausable {
     using SafeMath for uint256;
 
-    event LogBattleResult(uint256 kittyWinner, uint kittyLoser);
+    event LogBattleResult(uint256 _kittyWinner, uint256 _kittyLoser);
     event LogKittyReadyToBattle(uint256 _kittyId);
     event LogKittyBattle(uint256 _kittyIdAttacker, uint256 _kittyIdDefender);
     event LogKittyWithdraw(uint256 _kittyId);
-    event UpdateBattleContract(address _battleAddress);
+    event LogUpdateBattleContract(address _battleAddress);
 
     //Reward in ninelives token
     uint256 constant WIN_REWARD = 10;
@@ -30,6 +31,9 @@ contract Arena is Pausable {
 
     address battleAddress = address(0x0);
     BattleInterface battleInterface;
+
+    address public tokenAddress = address(0x0);
+    TokenInterface tokenInterface;
 
     mapping (uint256 => address) public kittyIndexToOwner;
 
@@ -50,13 +54,15 @@ contract Arena is Pausable {
         ckAddress = _kCore;
         nineLivesInterface = NineLivesInterface(nlAddress);
         battleInterface = BattleInterface(battleAddress);
+        tokenInterface = TokenInterface(tokenAddress);
         kittyInterface = CryptoKittyInterface(ckAddress);
 
         paused = true;
     }
 
     /**
-     * @dev Updates the battle contract address
+     * @dev Updates the battle contract address. The battle contract should be 
+     * independant of any nl contracts as the battle methods can/will be updated for balancing if necessary
      *
      * @param _battleAddress The new battle contracts address
      */
@@ -67,7 +73,20 @@ contract Arena is Pausable {
         require(_battleAddress != address(0x0));
         battleAddress = _battleAddress;
         battleInterface = BattleInterface(battleAddress);
-        UpdateBattleContract(_battleAddress);
+        LogUpdateBattleContract(_battleAddress);
+    }
+
+    /**
+     * @dev Adds a token for the arena to mint. Can only be called once
+     */
+     function addTokenAddress(address _tokenAddress)
+        external
+        onlyOwner
+    {
+        require(_tokenAddress != address(0x0) && tokenAddress == address(0x0));
+        tokenAddress = _tokenAddress;
+        tokenInterface = TokenInterface(tokenAddress);
+        require(tokenInterface.isMintableToken());
     }
 
     /**
@@ -125,7 +144,7 @@ contract Arena is Pausable {
      *
      * @param _kittyId The kitty's id
      */
-    function withdrawKitty(uint _kittyId)
+    function withdrawKitty(uint256 _kittyId)
         external
     {
         require(kittyIndexToOwner[_kittyId] == msg.sender);
@@ -168,10 +187,11 @@ contract Arena is Pausable {
     {
         require(rewards[msg.sender] > 0);
 
-        uint _reward = rewards[msg.sender];
+        uint256 _reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
 
-        //TODO: Add reward amount to token contract
+        if(tokenAddress != address(0x0))
+            require(tokenInterface.externalMint(msg.sender, _reward));
     }
 
     /**
@@ -181,7 +201,7 @@ contract Arena is Pausable {
      * @param _kittyIdAttacker The attacking kitty's id
      * @param _kittyIdDefender The kitty who was ready to battle in the arena
      */
-    function _battle(uint _kittyIdAttacker, uint _kittyIdDefender)
+    function _battle(uint256 _kittyIdAttacker, uint256 _kittyIdDefender)
         internal
         whenNotPaused
     {
@@ -215,7 +235,7 @@ contract Arena is Pausable {
      *
      * @param _kittyId The kitty's id
      */
-    function _finishedBattling(uint _kittyId)
+    function _finishedBattling(uint256 _kittyId)
         internal
     {
         if(nineLivesInterface.getKittyLives(_kittyId) == 1) {
@@ -231,7 +251,7 @@ contract Arena is Pausable {
      *
      * @param _kittyId The kitty's id
      */
-    modifier isOwnerOf(uint _kittyId) {
+    modifier isOwnerOf(uint256 _kittyId) {
         require(kittyInterface.ownerOf(_kittyId) == msg.sender);
         _;
     }
