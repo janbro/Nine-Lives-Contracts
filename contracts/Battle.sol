@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Interfaces/CryptoKittyInterface.sol";
@@ -25,10 +25,10 @@ contract Battle {
     {
         uint8 winPercentageAttacker = 10;
 
-        uint[4] memory attackerStats;
+        uint256[4] memory attackerStats;
         (,,,,, attackerStats[0], attackerStats[1], attackerStats[2], attackerStats[3],) = kittyInterface.getKitty(_kittyIdAttacker);
 
-        uint[4] memory defenderStats;
+        uint256[4] memory defenderStats;
         (,,,,, defenderStats[0], defenderStats[1], defenderStats[2], defenderStats[3],) = kittyInterface.getKitty(_kittyIdDefender);
 
         if(attackerStats[0] > defenderStats[0]) {
@@ -70,14 +70,14 @@ contract Battle {
     /**
      * @dev Computes a random number based on the psuedorandom blockhash
      */
-    function _randomNumber(uint _floor, uint _ceiling)
+    function _randomNumber(uint256 _floor, uint256 _ceiling)
         internal
         view
-        returns (uint)
+        returns (uint256)
     {
         require(_ceiling > _floor);
         
-        return uint(block.blockhash(block.number-1))%(_ceiling.sub(_floor)).add(_floor);
+        return uint256(block.blockhash(block.number-1))%(_ceiling.sub(_floor)).add(_floor);
     }
 
     modifier isConnected() {
