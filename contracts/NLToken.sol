@@ -5,6 +5,8 @@ import '../node_modules/zeppelin-solidity/contracts/token/ERC20/MintableToken.so
 contract NLToken is MintableToken {
 
     address external_minter = address(0x0);
+    string public constant name = "Nine Lives Token";
+    string public constant symbol = "NLT";
 
     function NLToken(address _arena_address) public {
         external_minter = _arena_address;
@@ -23,7 +25,11 @@ contract NLToken is MintableToken {
         onlyMinter        
         returns (bool)
     {
-        return mint(_to, _amount);
+        totalSupply_ = totalSupply_.add(_amount);
+        balances[_to] = balances[_to].add(_amount);
+        Mint(_to, _amount);
+        Transfer(address(0), _to, _amount);
+        return true;
     }
 
 
