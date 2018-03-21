@@ -3,16 +3,19 @@ var BigNumber = require('bignumber.js');
 var Arena = artifacts.require("./Arena.sol");
 var KittyCore = artifacts.require("./CryptoKitties/KittyCore.sol");
 var NineLives = artifacts.require("./NineLives.sol");
+var NLToken = artifacts.require("./NLToken.sol");
 
 contract("Arena", function(accounts) {
     var arenaInstance;
     var kittyCoreInstance;
     var nlInstance;
+    var nlTokenInstance;
 
     before(async function () {
         arenaInstance = await Arena.deployed();
         kittyCoreInstance = await KittyCore.deployed();
         nlInstance = await NineLives.deployed();
+        nlTokenInstance = await NLToken.deployed();
 
         await kittyCoreInstance.unpause({from:accounts[0]});
         var kcIsPaused = await kittyCoreInstance.paused({from:accounts[0]});
@@ -25,7 +28,9 @@ contract("Arena", function(accounts) {
 
         assert(!kcIsPaused && !nlIsPaused && !arenaIsPaused, "Contract couldn't unpause");
 
-        nlInstance.updateArenaContract(Arena.address);
+        await nlInstance.updateArenaContract(Arena.address);
+
+        await arenaInstance.addTokenAddress(nlTokenInstance.address, {from:accounts[0]});
 
         for(var i = 0; i < 10; i++) {
             //Odd kitties go to account[0], even kitties go to account[1]
@@ -98,6 +103,15 @@ contract("Arena", function(accounts) {
 
             assert(atkOwner == "0x000000000000000000000000000000000000dead" || 
                 defOwner == "0x000000000000000000000000000000000000dead", "Kitty wasn't sent to graveyard!");
+        });
+    });
+
+    describe("Payment handling", function() {
+        it("should receive NLToken as reward", async function() {
+            var accBal = await nlTokenInstance.balanceOf(accounts[0], {from:accounts[0]});
+            await arenaInstance.withdrawRewards({from:accounts[0]});
+            var accBalAfter = await nlTokenInstance.balanceOf(accounts[0], {from:accounts[0]});
+            assert(accBalAfter > accBal, "NLToken reward wasn't payed out");
         });
     });
 
