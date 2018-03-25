@@ -1,7 +1,7 @@
 var BigNumber = require('bignumber.js');
 
 var Arena = artifacts.require("./Arena.sol");
-var KittyCore = artifacts.require("./CryptoKitties/KittyCore.sol");
+var KittyCore = artifacts.require("./CryptoKitties/KittyCoreWrapper.sol");
 var NineLives = artifacts.require("./NineLives.sol");
 var NLToken = artifacts.require("./NLToken.sol");
 
