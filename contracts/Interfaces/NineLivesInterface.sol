@@ -17,4 +17,6 @@ contract NineLivesInterface {
     function setIsReadyToBattle(uint256 _id, bool _isReadyToBattle) external;
 
     function decrementLives(uint256 _id) external;
+
+    function incrementWins(uint256 _id) external;
 }

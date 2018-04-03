@@ -79,7 +79,7 @@ contract Arena is Pausable {
     /**
      * @dev Adds a token for the arena to mint. Can only be called once
      */
-     function addTokenAddress(address _tokenAddress)
+    function addTokenAddress(address _tokenAddress)
         external
         onlyOwner
     {
@@ -214,6 +214,7 @@ contract Arena is Pausable {
             //Attacker won
             rewards[kittyIndexToOwner[_kittyIdAttacker]] = rewards[kittyIndexToOwner[_kittyIdAttacker]].add(WIN_REWARD);
             rewards[kittyIndexToOwner[_kittyIdDefender]] = rewards[kittyIndexToOwner[_kittyIdDefender]].add(LOSS_REWARD).add(LOSS_REWARD.mul(DEFENDER_BONUS_PER).div(100));
+            nineLivesInterface.incrementWins(_kittyIdAttacker);
             nineLivesInterface.decrementLives(_kittyIdDefender);
             LogBattleResult(_kittyIdAttacker, _kittyIdDefender);
         }
@@ -221,6 +222,7 @@ contract Arena is Pausable {
             //Defender won
             rewards[kittyIndexToOwner[_kittyIdAttacker]] = rewards[kittyIndexToOwner[_kittyIdAttacker]].add(LOSS_REWARD);
             rewards[kittyIndexToOwner[_kittyIdDefender]] = rewards[kittyIndexToOwner[_kittyIdDefender]].add(WIN_REWARD).add(WIN_REWARD.mul(DEFENDER_BONUS_PER).div(100));
+            nineLivesInterface.incrementWins(_kittyIdDefender);
             nineLivesInterface.decrementLives(_kittyIdAttacker);
             LogBattleResult(_kittyIdDefender, _kittyIdAttacker);
         }
