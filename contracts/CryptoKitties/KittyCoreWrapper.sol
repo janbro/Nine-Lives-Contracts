@@ -18,7 +18,7 @@ contract KittyCoreWrapper is KittyCore {
     function createPromoKittyId(uint256 _kittyId, uint256 _genes, address _owner) external onlyCOO {
         address kittyOwner = _owner;
         if (kittyOwner == address(0)) {
-             kittyOwner = cooAddress;
+            kittyOwner = cooAddress;
         }
         require(promoCreatedCount < PROMO_CREATION_LIMIT);
 
